@@ -4,6 +4,12 @@ from app.cases import bp
 from app.extensions import db
 from app.models import Case, Result, User
 
+def _parse_year(val):
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return None
+
 def _active_user():
     uid = int(get_jwt_identity())
     user = db.session.get(User, uid)
@@ -34,6 +40,7 @@ def _case_dict(c):
         "consecutive_errors": c.consecutive_errors,
         "latest_result": {
             "decision_number": latest.decision_number,
+            "decision_year": latest.decision_year,
             "result_text": latest.result_text,
             "checked_at": latest.checked_at.isoformat(),
             "decision_link": latest.decision_link,
@@ -55,10 +62,13 @@ def add_case():
     data = request.get_json() or {}
     if data.get("search_type") not in ("GAK", "EAK"):
         return jsonify({"error": "search_type must be GAK or EAK"}), 400
+    year = _parse_year(data.get("year"))
+    if not year:
+        return jsonify({"error": "year is required and must be a number"}), 400
     c = Case(user_id=user.id, court=data.get("court", ""),
              search_type=data["search_type"],
              number=str(data.get("number", "")),
-             year=int(data.get("year", 0)),
+             year=year,
              description=data.get("description"))
     db.session.add(c)
     db.session.commit()
@@ -78,7 +88,10 @@ def patch_case(case_id):
                 return jsonify({"error": "invalid search_type"}), 400
             setattr(c, field, data[field])
     if "year" in data:
-        c.year = int(data["year"])
+        year = _parse_year(data["year"])
+        if year is None:
+            return jsonify({"error": "year must be a number"}), 400
+        c.year = year
     db.session.commit()
     return jsonify(_case_dict(c)), 200
 

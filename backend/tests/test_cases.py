@@ -53,3 +53,46 @@ def test_cannot_access_other_user_case(client, db, auth_headers):
     db.session.commit()
     resp = client.delete(f"/api/cases/{c.id}", headers=auth_headers)
     assert resp.status_code == 404
+
+def test_subscription_required(client, db):
+    """User without active subscription cannot access cases."""
+    import bcrypt
+    from app.models import User
+    pw = bcrypt.hashpw(b"password123", bcrypt.gensalt()).decode()
+    u = User(email="inactive@x.com", password_hash=pw,
+             email_verified=True, subscription_status="inactive")
+    db.session.add(u)
+    db.session.commit()
+    # Login to get token
+    resp = client.post("/api/auth/login",
+                       json={"email": "inactive@x.com", "password": "password123"})
+    token = resp.get_json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    resp2 = client.get("/api/cases", headers=headers)
+    assert resp2.status_code == 403
+
+def test_case_results_endpoint(client, auth_headers, db):
+    """GET /api/cases/:id/results returns result history."""
+    from app.models import Case, Result
+    from app.extensions import db as _db
+    # Get the user ID from the fixture
+    from app.models import User
+    user = User.query.filter_by(email="test@example.com").first()
+    c = Case(user_id=user.id, court="X", search_type="GAK", number="1", year=2024)
+    _db.session.add(c)
+    _db.session.commit()
+    r = Result(case_id=c.id, result_text="Pending", decision_number=None)
+    _db.session.add(r)
+    _db.session.commit()
+    resp = client.get(f"/api/cases/{c.id}/results", headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+
+def test_add_case_invalid_year(client, auth_headers):
+    """Non-numeric year returns 400."""
+    resp = client.post("/api/cases", headers=auth_headers, json={
+        "court": "X", "search_type": "GAK", "number": "1", "year": "notayear"
+    })
+    assert resp.status_code == 400
