@@ -13,7 +13,7 @@ class Config:
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    JWT_SECRET_KEY = "test-secret"
+    JWT_SECRET_KEY = "test-secret-key-minimum-32-bytes!!"
     SECRET_KEY = "test-flask-secret"
     WTF_CSRF_ENABLED = False
     RATELIMIT_ENABLED = False

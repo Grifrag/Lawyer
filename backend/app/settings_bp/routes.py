@@ -2,7 +2,7 @@ from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.settings_bp import bp
 from app.extensions import db
-from app.models import Setting, User
+from app.models import Setting
 from crypto import encrypt, decrypt
 
 SENSITIVE_KEYS = {"gmail_app_password", "telegram_bot_token"}
