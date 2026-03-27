@@ -11,7 +11,7 @@ def test_register(client):
 
 def test_register_duplicate(client, user):
     resp = client.post("/api/auth/register", json={
-        "email": "test@example.com", "password": "x"
+        "email": "test@example.com", "password": "password123"
     })
     assert resp.status_code == 409
 
@@ -75,11 +75,11 @@ def test_reset_password_success(client, db):
     db.session.add(u)
     db.session.commit()
     resp = client.post("/api/auth/reset-password",
-                       json={"token": "tok123", "password": "newpass"})
+                       json={"token": "tok123", "password": "newpass1"})
     assert resp.status_code == 200
     db.session.refresh(u)
     assert u.reset_password_token is None
-    assert bcrypt.checkpw(b"newpass", u.password_hash.encode())
+    assert bcrypt.checkpw(b"newpass1", u.password_hash.encode())
 
 def test_reset_password_expired(client, db):
     import bcrypt

@@ -1,5 +1,6 @@
 import os
 import bcrypt
+from datetime import datetime, timedelta
 from flask import request, jsonify
 from flask_jwt_extended import (
     create_access_token, create_refresh_token,
@@ -18,6 +19,8 @@ def register():
     password = data.get("password", "")
     if not email or not password:
         return jsonify({"error": "email and password required"}), 400
+    if len(password) < 8:
+        return jsonify({"error": "password must be at least 8 characters"}), 400
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "email already registered"}), 409
     pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
@@ -66,6 +69,8 @@ def logout():
 @bp.route("/verify-email", methods=["POST"])
 def verify_email():
     token = (request.get_json() or {}).get("token")
+    if not token:
+        return jsonify({"error": "token required"}), 400
     user = User.query.filter_by(email_verify_token=token).first()
     if not user:
         return jsonify({"error": "invalid token"}), 400
@@ -77,7 +82,6 @@ def verify_email():
 @bp.route("/forgot-password", methods=["POST"])
 @limiter.limit("5/hour")
 def forgot_password():
-    from datetime import datetime, timedelta
     email = ((request.get_json() or {}).get("email") or "").lower().strip()
     user = User.query.filter_by(email=email).first()
     if user:
@@ -92,10 +96,13 @@ def forgot_password():
 
 @bp.route("/reset-password", methods=["POST"])
 def reset_password():
-    from datetime import datetime
     data = request.get_json() or {}
     token = data.get("token")
+    if not token:
+        return jsonify({"error": "token required"}), 400
     password = data.get("password", "")
+    if len(password) < 8:
+        return jsonify({"error": "password must be at least 8 characters"}), 400
     user = User.query.filter_by(reset_password_token=token).first()
     if not user or not user.reset_token_expires or user.reset_token_expires < datetime.utcnow():
         return jsonify({"error": "invalid or expired token"}), 400
