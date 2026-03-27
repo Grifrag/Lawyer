@@ -7,7 +7,11 @@ from app.models import Case, Result, User
 def _active_user():
     uid = int(get_jwt_identity())
     user = db.session.get(User, uid)
-    if not user or user.subscription_status not in ("active", "past_due"):
+    if not user:
+        return None, (jsonify({"error": "not found"}), 404)
+    if not user.email_verified:
+        return None, (jsonify({"error": "email_not_verified"}), 403)
+    if user.subscription_status not in ("active", "past_due"):
         return None, (jsonify({"error": "active subscription required"}), 403)
     return user, None
 
