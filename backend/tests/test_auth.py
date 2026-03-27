@@ -93,3 +93,27 @@ def test_reset_password_expired(client, db):
     resp = client.post("/api/auth/reset-password",
                        json={"token": "expiredtok", "password": "newpass"})
     assert resp.status_code == 400
+
+def test_verify_email_token_cannot_be_reused(client, db):
+    import bcrypt
+    pw = bcrypt.hashpw(b"pw", bcrypt.gensalt()).decode()
+    u = User(email="reuse@x.com", password_hash=pw,
+             email_verified=False, email_verify_token="reuse-token")
+    db.session.add(u)
+    db.session.commit()
+    # First use: success
+    resp1 = client.post("/api/auth/verify-email", json={"token": "reuse-token"})
+    assert resp1.status_code == 200
+    # Second use: token is now NULL, should fail
+    resp2 = client.post("/api/auth/verify-email", json={"token": "reuse-token"})
+    assert resp2.status_code == 400
+
+def test_login_sets_refresh_cookie(client, user):
+    resp = client.post("/api/auth/login", json={
+        "email": "test@example.com", "password": "password123"
+    })
+    assert resp.status_code == 200
+    # Check Set-Cookie header contains refresh_token
+    cookie_header = resp.headers.get("Set-Cookie", "")
+    assert "refresh_token" in cookie_header
+    assert "HttpOnly" in cookie_header

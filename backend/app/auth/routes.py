@@ -20,7 +20,7 @@ def register():
         return jsonify({"error": "email and password required"}), 400
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "email already registered"}), 409
-    pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
     token = generate_token()
     user = User(email=email, password_hash=pw_hash,
                 name=data.get("name"), email_verify_token=token)
@@ -51,7 +51,7 @@ def login():
     return resp, 200
 
 @bp.route("/refresh", methods=["POST"])
-@jwt_required(refresh=True)
+@jwt_required(refresh=True, locations=["cookies"])
 def refresh():
     uid = get_jwt_identity()
     access_token = create_access_token(identity=uid)
@@ -99,7 +99,7 @@ def reset_password():
     user = User.query.filter_by(reset_password_token=token).first()
     if not user or not user.reset_token_expires or user.reset_token_expires < datetime.utcnow():
         return jsonify({"error": "invalid or expired token"}), 400
-    user.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    user.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
     user.reset_password_token = None
     user.reset_token_expires = None
     db.session.commit()
