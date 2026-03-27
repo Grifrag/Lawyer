@@ -9,6 +9,11 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
+    if config_name == "production":
+        for var in ["DATABASE_URL", "JWT_SECRET_KEY", "FLASK_SECRET_KEY", "FERNET_KEY"]:
+            if not os.environ.get(var):
+                raise RuntimeError(f"Required env var {var!r} is not set")
+
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
@@ -43,14 +48,14 @@ def create_app(config_name=None):
             return
         try:
             verify_jwt_in_request(optional=True)
-            uid = get_jwt_identity()
-            if uid:
-                from app.models import User
-                user = User.query.get(int(uid))
-                if user and not user.email_verified:
-                    return jsonify({"error": "email_not_verified"}), 403
         except Exception:
-            pass
+            return  # no valid token — let JWT handle the 401 downstream
+        uid = get_jwt_identity()
+        if uid:
+            from app.models import User
+            user = db.session.get(User, int(uid))
+            if user and not user.email_verified:
+                return jsonify({"error": "email_not_verified"}), 403
 
     # Seed admin on startup
     _seed_admin(app)
