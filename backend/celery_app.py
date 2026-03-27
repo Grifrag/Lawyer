@@ -69,7 +69,7 @@ def _get_notification_config_for_user(uid, db_session):
     }
 
 
-def _run_cases(cases, db_session, app):
+def _run_cases(cases, db_session):
     """Core check loop: single browser, all cases."""
     import logging
     import time
@@ -80,6 +80,7 @@ def _run_cases(cases, db_session, app):
     logger = logging.getLogger(__name__)
     admin_email = os.environ.get("ADMIN_EMAIL", "")
 
+    from checker import _scrape_case
     from playwright.sync_api import sync_playwright, TimeoutError as PWTimeoutError
     BLOCKED = {"image", "media", "font", "stylesheet"}
 
@@ -110,7 +111,6 @@ def _run_cases(cases, db_session, app):
             # Retry up to 3 times on TimeoutError; abort immediately on other exceptions
             for attempt in range(3):
                 try:
-                    from checker import _scrape_case
                     result = _scrape_case(case.__dict__, page)
                     break
                 except PWTimeoutError as e:
@@ -131,7 +131,7 @@ def _run_cases(cases, db_session, app):
                 case.consecutive_errors += 1
                 # Send warning email exactly once when threshold is first reached
                 if case.consecutive_errors == 3:
-                    user = db_session.query(User).get(case.user_id)
+                    user = db_session.get(User, case.user_id)
                     if user:
                         send_email(
                             user.email,
@@ -145,6 +145,7 @@ def _run_cases(cases, db_session, app):
                 # Try insert; skip if duplicate (UNIQUE constraint)
                 from sqlalchemy.exc import IntegrityError
                 try:
+                    nested = db_session.begin_nested()
                     r = Result(
                         case_id=case.id,
                         decision_number=result["decision_number"],
@@ -161,8 +162,9 @@ def _run_cases(cases, db_session, app):
                                    "description": case.description or ""}
                     send_notification(**config, result=full_result)
                     r.notified = True
+                    nested.commit()
                 except IntegrityError:
-                    db_session.rollback()
+                    nested.rollback()
                     logger.info("Duplicate result for case %s — skip", case.id)
 
             db_session.commit()
@@ -199,7 +201,7 @@ def check_all_active_cases():
                              User.subscription_status == "active")
                      .all())
             logger.info("Checking %d cases", len(cases))
-            _run_cases(cases, db.session, flask_app)
+            _run_cases(cases, db.session)
     finally:
         r.delete("check_all_lock")
 
@@ -221,6 +223,6 @@ def run_check_for_user(user_id: int):
             from app.models import Case
             cases = db.session.query(Case).filter_by(
                 user_id=user_id, active=True).all()
-            _run_cases(cases, db.session, flask_app)
+            _run_cases(cases, db.session)
     finally:
         r.delete(lock_key)
