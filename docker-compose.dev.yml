@@ -1,0 +1,22 @@
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+services:
+  flask:
+    command: flask run --host=0.0.0.0 --port=5000 --reload
+    environment:
+      FLASK_ENV: development
+      FLASK_DEBUG: "1"
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: build
+    command: npm run dev -- --host
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+
+  nginx:
+    profiles: ["disabled"]  # disabled in dev
