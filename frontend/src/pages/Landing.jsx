@@ -5,8 +5,8 @@ export default function Landing() {
       <nav className="flex justify-between items-center px-8 py-4 border-b">
         <span className="font-bold text-xl">⚖️ Solon Checker</span>
         <div className="flex gap-4">
-          <Link to="/login" className="text-blue-700">Σύνδεση</Link>
-          <Link to="/register" className="bg-blue-700 text-white px-4 py-2 rounded">Εγγραφή</Link>
+          <Link to="/login" className="border border-blue-700 text-blue-700 px-4 py-2 rounded hover:bg-blue-50">Σύνδεση</Link>
+          <Link to="/register" className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">Εγγραφή</Link>
         </div>
       </nav>
       <div className="max-w-2xl mx-auto text-center py-24 px-6">
