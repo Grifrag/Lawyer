@@ -20,7 +20,7 @@ export default function Landing() {
         <div className="grid grid-cols-3 gap-6 text-left">
           {[
             ['🔍', 'Αυτόματος έλεγχος', '3 φορές/μέρα στο solon.gov.gr'],
-            ['📧', 'Άμεση ειδοποίηση', 'Gmail ή Telegram'],
+            ['📧', 'Άμεση ειδοποίηση', 'Email ή Telegram'],
             ['⚖️', 'Για δικηγόρους', 'Απλό, γρήγορο, αξιόπιστο'],
           ].map(([icon, title, desc]) => (
             <div key={title} className="p-4 border rounded-lg">
