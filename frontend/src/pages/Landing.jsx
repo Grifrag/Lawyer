@@ -13,7 +13,7 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-6 md:px-8 py-16 md:py-24 text-center">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-6 md:px-8 py-10 md:py-16 text-center flex flex-col justify-center">
         <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
           Αυτόματη παρακολούθηση<br className="hidden md:block" /> δικαστικών αποφάσεων
         </h1>
@@ -28,7 +28,7 @@ export default function Landing() {
         </Link>
 
         {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mt-14 md:mt-20 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mt-10 md:mt-14 text-left">
           {[
             ['🔍', 'Αυτόματος έλεγχος', '3 φορές/μέρα στο solon.gov.gr'],
             ['📧', 'Άμεση ειδοποίηση', 'Email ή Telegram'],
