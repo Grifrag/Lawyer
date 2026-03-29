@@ -22,7 +22,7 @@ export default function Landing() {
         </p>
         <Link
           to="/register"
-          className="inline-block bg-blue-700 text-white px-10 py-4 rounded-lg text-lg font-semibold hover:bg-blue-800"
+          className="self-center bg-blue-700 text-white px-10 py-4 rounded-lg text-lg font-semibold hover:bg-blue-800"
         >
           Ξεκινήστε — €15/μήνα
         </Link>
