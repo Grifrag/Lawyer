@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.insert(0, '/app')
 from celery import Celery
 from celery.schedules import crontab
 
