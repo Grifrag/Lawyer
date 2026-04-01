@@ -39,8 +39,8 @@ def _scrape_case(case, page):
 
     for attempt in range(3):
         try:
-            page.goto(SOLON_URL, wait_until="domcontentloaded")
-            page.wait_for_timeout(2000)
+            page.goto(SOLON_URL, wait_until="commit")
+            page.wait_for_timeout(5000)
 
             # Select court from dropdown by visible text
             page.select_option("select[id*='court'], select[id*='Court']", label=court)
@@ -59,8 +59,7 @@ def _scrape_case(case, page):
 
             # Submit
             page.click("button[id*='search'], input[type='submit']")
-            page.wait_for_load_state("domcontentloaded")
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(5000)
 
             # Check for "no data" message
             if page.locator("text=Δεν βρέθηκαν δεδομένα").count() > 0:
