@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import client from '../api/client'
@@ -49,8 +50,35 @@ export default function Dashboard() {
     mutationFn: c => client.patch(`/cases/${c.id}`, { active: !c.active }),
     onSuccess: () => qc.invalidateQueries(['cases'])
   })
+  const [checking, setChecking] = useState(false)
+  const pollRef = useRef(null)
+
+  const stopPolling = () => {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+  }
+
+  useEffect(() => () => stopPolling(), [])
+
+  const startPolling = () => {
+    setChecking(true)
+    pollRef.current = setInterval(async () => {
+      try {
+        const { data } = await client.get('/checks/status')
+        if (!data.running) {
+          stopPolling()
+          setChecking(false)
+          qc.invalidateQueries(['cases'])
+        }
+      } catch {
+        stopPolling()
+        setChecking(false)
+      }
+    }, 3000)
+  }
+
   const runNow = useMutation({
     mutationFn: () => client.post('/checks/run-now'),
+    onSuccess: () => startPolling(),
   })
 
   return (
@@ -61,9 +89,9 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold">Υποθέσεις</h1>
           <div className="flex gap-3">
             <button onClick={() => runNow.mutate()}
-                    disabled={runNow.isPending}
+                    disabled={checking || runNow.isPending}
                     className="bg-gray-200 px-3 py-2 rounded text-sm flex-1 sm:flex-none">
-              {runNow.isPending ? '⏳ Έλεγχος...' : '🔄 Έλεγχος τώρα'}
+              {checking ? '⏳ Έλεγχος...' : '🔄 Έλεγχος τώρα'}
             </button>
             <Link to="/cases/new"
                   className="bg-blue-700 text-white px-3 py-2 rounded text-sm flex-1 sm:flex-none text-center">
