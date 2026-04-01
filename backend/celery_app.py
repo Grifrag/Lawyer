@@ -168,6 +168,11 @@ def _run_cases(cases, db_session):
                 except IntegrityError:
                     nested.rollback()
                     logger.info("Duplicate result for case %s — skip", case.id)
+            else:
+                # No decision found — save a pending record so dashboard shows "Εκκρεμεί"
+                r = Result(case_id=case.id, result_text="Εκκρεμεί")
+                db_session.add(r)
+                case.consecutive_errors = 0
 
             db_session.commit()
 
