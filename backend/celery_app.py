@@ -84,7 +84,7 @@ def _run_cases(cases, db_session):
 
     from checker import _scrape_case
     from playwright.sync_api import sync_playwright, TimeoutError as PWTimeoutError
-    BLOCKED = {"image", "media", "font", "stylesheet"}
+    BLOCKED = {"image", "media"}  # Do NOT block font/stylesheet — ADF needs CSS to render form elements
 
     total_cases = len(cases)
     total_errors = 0
