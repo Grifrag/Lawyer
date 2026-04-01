@@ -26,9 +26,7 @@ def _scrape_case(case, page):
     Use an existing Playwright page to search solon.gov.gr for the given case.
     Returns dict with decision info, or None if no decision found.
 
-    NOTE: CSS selectors are best-guess based on Oracle ADF structure.
-    They MUST be verified against the live solon.gov.gr DOM.
-    Use headless=False to inspect if needed.
+    Selectors verified against the live solon.gov.gr DOM (Oracle ADF).
     """
     court = case["court"]
     search_type = case["search_type"]
@@ -39,52 +37,62 @@ def _scrape_case(case, page):
 
     for attempt in range(3):
         try:
+            # wait_until="commit" fires on first response byte — ADF never fires domcontentloaded
             page.goto(SOLON_URL, wait_until="commit")
-            page.wait_for_timeout(5000)
+            page.wait_for_timeout(8000)  # ADF needs time to initialize JS
 
-            # Select court from dropdown by visible text
-            page.select_option("select[id*='court'], select[id*='Court']", label=court)
-            page.wait_for_timeout(2000)  # ADF re-renders after selection
+            # Court dropdown: select[name='courtOfficeOC'] — label match is trimmed by Playwright
+            page.select_option("select[name='courtOfficeOC']", label=court)
+            page.wait_for_timeout(3000)  # ADF re-renders after court selection
 
-            # Select search type (GAK or EAK)
-            if search_type == "GAK":
-                page.click("input[value='GAK'], label:has-text('ΓΑΚ')")
+            # Search type radio: value=0 → GAK (default), value=1 → EAK
+            if search_type != "GAK":
+                page.click("input[name='socSelectedSearchOption'][value='1']")
+                page.wait_for_timeout(500)
+                # EAK inputs
+                page.fill("input[name='it1Eak']", number)
+                page.fill("input[name='it2eak']", year)
             else:
-                page.click("input[value='EAK'], label:has-text('ΕΑΚ')")
-            page.wait_for_timeout(500)
+                # GAK inputs
+                page.fill("input[name='it1']", number)
+                page.fill("input[name='it2']", year)
 
-            # Fill number and year
-            page.fill("input[id*='gakNumber'], input[id*='Number']", number)
-            page.fill("input[id*='gakYear'], input[id*='Year']", year)
-
-            # Submit
-            page.click("button[id*='search'], input[type='submit']")
+            # Search button is an <a> inside div#ldoSearch
+            page.click("#ldoSearch a")
             page.wait_for_timeout(5000)
 
-            # Check for "no data" message
-            if page.locator("text=Δεν βρέθηκαν δεδομένα").count() > 0:
+            # No results: pt_emptyList becomes visible
+            if page.locator("#pt_emptyList").is_visible():
                 logger.info("No data found for case %s/%s", number, year)
                 return None
 
-            # Parse results table
-            rows = page.locator("table tr").all()
-            for row in rows[1:]:  # skip header
-                cells = row.locator("td").all_text_contents()
-                if len(cells) < 8:
-                    continue
-                # Column positions based on solon.gov.gr table structure:
-                # 0: Filing date, 1: GAK, 2: GAK year, 3: EAK, 4: EAK year,
-                # 5: Procedure, 6: Subject, 7: Type, 8: Docket,
-                # 9: Decision number, 10: Decision year, 11: Result
-                decision_number = cells[9].strip() if len(cells) > 9 else ""
-                decision_year = cells[10].strip() if len(cells) > 10 else ""
-                result_text = cells[11].strip() if len(cells) > 11 else ""
+            # Results: each row has 8 role=gridcell elements
+            # [0] GAK/yr, [1] EAK/yr, [2] procedure, [3] subject, [4] type,
+            # [5] docket, [6] "decision_num/year - kind", [7] result_text
+            gridcells = page.locator("[role='gridcell']").all()
+            if not gridcells:
+                return None
 
-                if decision_number:
+            cells_per_row = 8
+            for i in range(0, len(gridcells), cells_per_row):
+                row_cells = gridcells[i:i + cells_per_row]
+                if len(row_cells) < 8:
+                    continue
+                decision_col = row_cells[6].inner_text().strip()
+                result_text = row_cells[7].inner_text().strip()
+
+                # decision_col format: "1532/2026 - ΔΕΚΤΗ"
+                if decision_col and "/" in decision_col:
+                    parts = decision_col.split(" - ", 1)
+                    num_year = parts[0].strip().split("/")
+                    decision_number = num_year[0].strip()
+                    decision_year = num_year[1].strip() if len(num_year) > 1 else ""
+                    decision_kind = parts[1].strip() if len(parts) > 1 else ""
+                    full_result = f"{result_text} - {decision_kind}" if decision_kind else result_text
                     return {
                         "decision_number": decision_number,
                         "decision_year": decision_year,
-                        "result_text": result_text,
+                        "result_text": full_result,
                         "decision_link": _build_decision_link(
                             court, search_type, number, year
                         ),
