@@ -3,7 +3,7 @@ import redis as redis_lib
 from flask import jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.checks import bp
-from app.extensions import limiter
+from app.extensions import limiter, db
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
@@ -13,9 +13,20 @@ run_check_for_user = None
 def _redis():
     return redis_lib.from_url(REDIS_URL)
 
+def _current_user_is_admin():
+    try:
+        from flask_jwt_extended import verify_jwt_in_request
+        from app.models import User
+        verify_jwt_in_request()
+        uid = int(get_jwt_identity())
+        user = db.session.get(User, uid)
+        return user is not None and user.is_admin
+    except Exception:
+        return False
+
 @bp.route("/run-now", methods=["POST"])
 @jwt_required()
-@limiter.limit("3/hour")
+@limiter.limit("3/hour", exempt_when=_current_user_is_admin)
 def run_now():
     global run_check_for_user
     uid = int(get_jwt_identity())
