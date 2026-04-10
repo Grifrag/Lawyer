@@ -25,8 +25,10 @@ def register():
         return jsonify({"error": "email already registered"}), 409
     pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
     token = generate_token()
+    trial_end = datetime.utcnow() + timedelta(days=30)
     user = User(email=email, password_hash=pw_hash,
-                name=data.get("name"), email_verify_token=token)
+                name=data.get("name"), email_verify_token=token,
+                subscription_status="trial", trial_ends_at=trial_end)
     db.session.add(user)
     db.session.commit()
     base_url = os.environ.get("APP_BASE_URL", "http://localhost:5173")
@@ -47,7 +49,8 @@ def login():
     refresh_token = create_refresh_token(identity=str(user.id))
     resp = jsonify({"access_token": access_token,
                     "email_verified": user.email_verified,
-                    "subscription_status": user.subscription_status})
+                    "subscription_status": user.subscription_status,
+                    "trial_ends_at": user.trial_ends_at.isoformat() if user.trial_ends_at else None})
     resp.set_cookie("refresh_token", refresh_token,
                     httponly=True, secure=True, samesite="Strict",
                     max_age=2592000)

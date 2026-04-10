@@ -18,6 +18,7 @@ class User(db.Model):
     email_verify_token = db.Column(db.Text)
     reset_password_token = db.Column(db.Text)
     reset_token_expires = db.Column(db.DateTime)
+    trial_ends_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     cases = db.relationship("Case", backref="user", lazy=True, cascade="all, delete-orphan")
     settings = db.relationship("Setting", backref="user", lazy=True, cascade="all, delete-orphan")

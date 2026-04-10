@@ -3,6 +3,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import client from '../api/client'
 import Navbar from '../components/Navbar'
+import { useAuthStore } from '../store/authStore'
+
+function TrialBanner({ trialEndsAt }) {
+  if (!trialEndsAt) return null
+  const days = Math.ceil((new Date(trialEndsAt) - new Date()) / 86400000)
+  if (days <= 0) return (
+    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+      ⚠️ Η δοκιμαστική περίοδος έληξε. <Link to="/billing" className="underline font-semibold">Ενεργοποιήστε συνδρομή</Link> για να συνεχίσετε.
+    </div>
+  )
+  return (
+    <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4 text-sm">
+      🎁 Δοκιμαστική περίοδος — απομένουν <strong>{days} μέρες</strong>. <Link to="/billing" className="underline">Αναβαθμίστε</Link>
+    </div>
+  )
+}
 
 function CaseCard({ c, onDelete, onToggle }) {
   const latest = c.latest_result
@@ -37,6 +53,7 @@ function CaseCard({ c, onDelete, onToggle }) {
 }
 
 export default function Dashboard() {
+  const { user } = useAuthStore()
   const qc = useQueryClient()
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ['cases'],
@@ -99,6 +116,7 @@ export default function Dashboard() {
             </Link>
           </div>
         </div>
+        {user?.subscription_status === 'trial' && <TrialBanner trialEndsAt={user.trial_ends_at} />}
         {isLoading && <p>Φόρτωση...</p>}
         {!isLoading && cases.length === 0 && (
           <div className="text-center py-16 text-gray-400">

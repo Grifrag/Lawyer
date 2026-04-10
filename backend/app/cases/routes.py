@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.cases import bp
@@ -10,6 +11,14 @@ def _parse_year(val):
     except (TypeError, ValueError):
         return None
 
+def _has_access(user):
+    """Active subscription OR trial period not yet expired."""
+    if user.subscription_status in ("active", "past_due"):
+        return True
+    if user.subscription_status == "trial" and user.trial_ends_at:
+        return datetime.utcnow() < user.trial_ends_at
+    return False
+
 def _active_user():
     uid = int(get_jwt_identity())
     user = db.session.get(User, uid)
@@ -17,7 +26,7 @@ def _active_user():
         return None, (jsonify({"error": "not found"}), 404)
     if not user.email_verified:
         return None, (jsonify({"error": "email_not_verified"}), 403)
-    if user.subscription_status not in ("active", "past_due"):
+    if not _has_access(user):
         return None, (jsonify({"error": "active subscription required"}), 403)
     return user, None
 

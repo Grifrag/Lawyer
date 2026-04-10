@@ -19,6 +19,7 @@ export default function Login() {
         email,
         email_verified: data.email_verified,
         subscription_status: data.subscription_status,
+        trial_ends_at: data.trial_ends_at,
       })
       nav('/dashboard')
     } catch (err) {
