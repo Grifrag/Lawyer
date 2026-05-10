@@ -51,10 +51,10 @@ export default function Billing() {
             status === 'past_due' ? '⚠️ Εκπρόθεσμη πληρωμή' :
             status === 'cancelled' ? '❌ Ακυρωμένη' : '— Ανενεργή'
           }</p>
-          <p className="mb-6 text-gray-600 text-sm">€9.99/μήνα · Ακύρωση οποιαδήποτε στιγμή</p>
+          <p className="mb-6 text-gray-600 text-sm">€4.99/μήνα · Ακύρωση οποιαδήποτε στιγμή</p>
           {status === 'active'
             ? <button onClick={manage} className="w-full bg-gray-200 py-2 rounded">Διαχείριση Συνδρομής</button>
-            : <button onClick={subscribe} className="w-full bg-blue-700 text-white py-2 rounded font-semibold">Εγγραφή — €9.99/μήνα</button>
+            : <button onClick={subscribe} className="w-full bg-blue-700 text-white py-2 rounded font-semibold">Εγγραφή — €4.99/μήνα</button>
           }
         </div>
       </div>

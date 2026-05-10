@@ -24,7 +24,7 @@ export default function Landing() {
           to="/register"
           className="self-center bg-blue-700 text-white px-10 py-4 rounded-lg text-lg font-semibold hover:bg-blue-800"
         >
-          Ξεκινήστε — €9.99/μήνα
+          Ξεκινήστε — €4.99/μήνα
         </Link>
 
         {/* Features */}
