@@ -6,6 +6,7 @@ export default function Register() {
   const [form, setForm] = useState({ email: '', password: '', name: '' })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [sentEmail, setSentEmail] = useState('')
 
   const set = k => e => setForm(f => ({...f, [k]: e.target.value}))
 
@@ -13,6 +14,7 @@ export default function Register() {
     e.preventDefault()
     try {
       await client.post('/auth/register', form)
+      setSentEmail(form.email)
       setSuccess(true)
     } catch (err) {
       setError(err.response?.data?.error || 'Σφάλμα εγγραφής')
@@ -20,11 +22,19 @@ export default function Register() {
   }
 
   if (success) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="bg-white p-8 rounded shadow text-center">
-        <p className="text-xl">✅ Εγγραφή επιτυχής!</p>
-        <p className="mt-2 text-gray-600">Ελέγξτε το email σας για επαλήθευση.</p>
-        <Link to="/login" className="mt-4 block text-blue-600">Σύνδεση</Link>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-8 rounded shadow text-center max-w-md">
+        <p className="text-4xl mb-4">📧</p>
+        <p className="text-xl font-bold mb-3">Ελέγξτε το email σας!</p>
+        <p className="text-gray-600 mb-2">
+          Σας στείλαμε email επαλήθευσης στο:
+        </p>
+        <p className="font-semibold text-blue-700 mb-4">{sentEmail}</p>
+        <p className="text-gray-500 text-sm mb-6">
+          Κάντε κλικ στον σύνδεσμο επαλήθευσης μέσα στο email για να ενεργοποιήσετε τον λογαριασμό σας.
+          Αν δεν το βλέπετε, ελέγξτε τον φάκελο <strong>Spam/Junk</strong>.
+        </p>
+        <Link to="/login" className="text-blue-600 text-sm">Επιστροφή στη σύνδεση</Link>
       </div>
     </div>
   )

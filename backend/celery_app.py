@@ -35,6 +35,14 @@ celery.conf.update(
             "task": "celery_app.check_all_active_cases",
             "schedule": crontab(hour=17, minute=0),
         },
+        "trial-reminders": {
+            "task": "celery_app.send_trial_reminders",
+            "schedule": crontab(hour=10, minute=0),  # κάθε μέρα 10:00
+        },
+        "expire-accounts": {
+            "task": "celery_app.expire_accounts",
+            "schedule": crontab(hour=10, minute=30),  # κάθε μέρα 10:30
+        },
     },
 )
 
@@ -69,6 +77,45 @@ def _get_notification_config_for_user(uid, db_session):
         "telegram_bot_token": _get("telegram_bot_token"),
         "telegram_chat_id": _get("telegram_chat_id"),
     }
+
+
+def _send_decision_email(to_email, result, send_email_fn):
+    """Send a decision notification email to the user's registered email."""
+    subject = (
+        f"⚖️ Νέα Απόφαση: {result['court']} — "
+        f"{result['search_type']} {result['number']}/{result['year']}"
+    )
+    desc = result.get('description', '')
+    html = f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+      <h2 style="color:#1a4fa0;">⚖️ Βρέθηκε Νέα Απόφαση</h2>
+      <table style="border-collapse:collapse;width:100%;">
+        <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;"><b>Δικαστήριο</b></td>
+            <td style="padding:8px;border:1px solid #ddd;">{result['court']}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;"><b>Αριθμός {result['search_type']}</b></td>
+            <td style="padding:8px;border:1px solid #ddd;">{result['number']}/{result['year']}</td></tr>
+        {'<tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;"><b>Περιγραφή</b></td><td style="padding:8px;border:1px solid #ddd;">' + desc + '</td></tr>' if desc else ''}
+        <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;"><b>Αριθμός Απόφασης</b></td>
+            <td style="padding:8px;border:1px solid #ddd;"><b>{result['decision_number']}/{result['decision_year']}</b></td></tr>
+        <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;"><b>Αποτέλεσμα</b></td>
+            <td style="padding:8px;border:1px solid #ddd;">{result.get('result_text','')}</td></tr>
+      </table>
+      <br>
+      <a href="{result['decision_link']}"
+         style="background:#1a4fa0;color:white;padding:12px 24px;
+                text-decoration:none;border-radius:4px;display:inline-block;">
+        Άνοιγμα στο Solon
+      </a>
+      <p style="color:#888;font-size:12px;margin-top:24px;">
+        Solon Checker · <a href="https://solonchecker.gr">solonchecker.gr</a>
+      </p>
+    </div>
+    """
+    try:
+        send_email_fn(to_email, subject, html)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error("Failed to send decision email to %s: %s", to_email, e)
 
 
 def _run_cases(cases, db_session):
@@ -162,6 +209,11 @@ def _run_cases(cases, db_session):
                                    "search_type": case.search_type,
                                    "number": case.number, "year": case.year,
                                    "description": case.description or ""}
+                    # Send email to user's registered email via SES
+                    user = db_session.get(User, case.user_id)
+                    if user:
+                        _send_decision_email(user.email, full_result, send_email)
+                    # Also send via user-configured channel (Telegram etc.) if set
                     send_notification(**config, result=full_result)
                     r.notified = True
                     nested.commit()
@@ -233,3 +285,136 @@ def run_check_for_user(user_id: int):
             _run_cases(cases, db.session)
     finally:
         r.delete(lock_key)
+
+
+@celery.task(name="celery_app.send_trial_reminders")
+def send_trial_reminders():
+    """Στέλνει reminder emails σε users που το trial λήγει σε 7 ή 1 μέρα."""
+    from datetime import datetime, timedelta
+    flask_app = _get_app()
+    with flask_app.app_context():
+        from app.extensions import db
+        from app.models import User
+        from app.auth.utils import send_email
+
+        now = datetime.utcnow()
+
+        for days_left, subject, body in [
+            (7,
+             "⏰ Απομένουν 7 μέρες στο δωρεάν trial σας — Solon Checker",
+             """
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+      <h2 style="color:#1a4fa0;">⏰ Το trial σας λήγει σε 7 μέρες</h2>
+      <p>Σας υπενθυμίζουμε ότι η δωρεάν δοκιμαστική περίοδος σας στο
+      <strong>Solon Checker</strong> λήγει σε <strong>7 μέρες</strong>.</p>
+      <p>Για να συνεχίσετε να λαμβάνετε ειδοποιήσεις για τις δικαστικές
+      αποφάσεις σας, ενεργοποιήστε τη συνδρομή σας.</p>
+      <a href="https://solonchecker.gr/billing"
+         style="background:#1a4fa0;color:white;padding:14px 28px;
+                text-decoration:none;border-radius:6px;display:inline-block;
+                font-size:16px;font-weight:bold;">
+        💳 Ενεργοποίηση Συνδρομής — €4.99/μήνα
+      </a>
+      <p style="margin-top:20px;color:#555;">
+        Μόνο <strong>€4.99/μήνα</strong> · Ακύρωση οποιαδήποτε στιγμή.
+      </p>
+      <p style="color:#888;font-size:12px;margin-top:32px;">
+        Solon Checker · <a href="https://solonchecker.gr">solonchecker.gr</a>
+      </p>
+    </div>
+             """),
+            (1,
+             "🚨 Αύριο λήγει το trial σας — Solon Checker",
+             """
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+      <h2 style="color:#c0392b;">🚨 Το trial σας λήγει αύριο!</h2>
+      <p>Η δωρεάν δοκιμαστική περίοδος σας στο <strong>Solon Checker</strong>
+      λήγει <strong>αύριο</strong>.</p>
+      <p>Μην χάσετε τις ειδοποιήσεις για τις δικαστικές αποφάσεις σας.
+      Ενεργοποιήστε τη συνδρομή σας σήμερα:</p>
+      <a href="https://solonchecker.gr/billing"
+         style="background:#c0392b;color:white;padding:14px 28px;
+                text-decoration:none;border-radius:6px;display:inline-block;
+                font-size:16px;font-weight:bold;">
+        💳 Ενεργοποίηση Συνδρομής — €4.99/μήνα
+      </a>
+      <p style="margin-top:20px;color:#555;">
+        Μόνο <strong>€4.99/μήνα</strong> · Ακύρωση οποιαδήποτε στιγμή.
+      </p>
+      <p style="color:#888;font-size:12px;margin-top:32px;">
+        Solon Checker · <a href="https://solonchecker.gr">solonchecker.gr</a>
+      </p>
+    </div>
+             """),
+        ]:
+            target_date = now + timedelta(days=days_left)
+            users = db.session.query(User).filter(
+                User.subscription_status == "trial",
+                User.trial_ends_at >= target_date.replace(hour=0, minute=0, second=0),
+                User.trial_ends_at < target_date.replace(hour=23, minute=59, second=59),
+            ).all()
+
+            for user in users:
+                try:
+                    send_email(user.email, subject, body)
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(
+                        "Failed trial reminder to %s: %s", user.email, e
+                    )
+
+
+@celery.task(name="celery_app.expire_accounts")
+def expire_accounts():
+    """Κόβει access σε trial users που πέρασαν το 2-ήμερο grace period."""
+    from datetime import datetime, timedelta
+    import logging
+    logger = logging.getLogger(__name__)
+    flask_app = _get_app()
+    with flask_app.app_context():
+        from app.extensions import db
+        from app.models import User
+        from app.auth.utils import send_email
+
+        now = datetime.utcnow()
+        grace_deadline = now - timedelta(days=2)
+
+        # Users whose trial + 2 days grace έχει περάσει
+        expired_users = db.session.query(User).filter(
+            User.subscription_status == "trial",
+            User.trial_ends_at < grace_deadline,
+        ).all()
+
+        for user in expired_users:
+            user.subscription_status = "cancelled"
+            db.session.commit()
+            logger.info("Expired account for user %s", user.email)
+            try:
+                send_email(
+                    user.email,
+                    "Ο λογαριασμός σας απενεργοποιήθηκε — Solon Checker",
+                    f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+      <h2 style="color:#c0392b;">❌ Ο λογαριασμός σας απενεργοποιήθηκε</h2>
+      <p>Η δωρεάν δοκιμαστική περίοδος σας έληξε και ο λογαριασμός σας
+      στο <strong>Solon Checker</strong> έχει απενεργοποιηθεί.</p>
+      <p>Για να επαναφέρετε την πρόσβασή σας και να συνεχίσετε να
+      παρακολουθείτε τις υποθέσεις σας, ενεργοποιήστε τη συνδρομή σας:</p>
+      <a href="https://solonchecker.gr/billing"
+         style="background:#1a4fa0;color:white;padding:14px 28px;
+                text-decoration:none;border-radius:6px;display:inline-block;
+                font-size:16px;font-weight:bold;">
+        💳 Ενεργοποίηση Συνδρομής — €4.99/μήνα
+      </a>
+      <p style="margin-top:20px;color:#555;">
+        Τα δεδομένα σας (υποθέσεις κλπ) <strong>διατηρούνται</strong> —
+        μόλις ενεργοποιήσετε συνδρομή, όλα επαναφέρονται κανονικά.
+      </p>
+      <p style="color:#888;font-size:12px;margin-top:32px;">
+        Solon Checker · <a href="https://solonchecker.gr">solonchecker.gr</a>
+      </p>
+    </div>
+                    """
+                )
+            except Exception as e:
+                logger.error("Failed expiry email to %s: %s", user.email, e)

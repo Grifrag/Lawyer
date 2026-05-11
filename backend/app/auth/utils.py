@@ -9,13 +9,15 @@ def generate_token(n=32) -> str:
     return secrets.token_urlsafe(n)
 
 def send_email(to: str, subject: str, html: str):
-    sender  = os.environ.get("MAIL_SENDER", "")
-    password = os.environ.get("MAIL_APP_PASSWORD", "")
-    host    = os.environ.get("SMTP_HOST", "smtp-relay.brevo.com")
-    port    = int(os.environ.get("SMTP_PORT", "587"))
-    user    = os.environ.get("SMTP_USER", sender)   # Brevo uses login email as user
+    host     = os.environ.get("SMTP_HOST", "")
+    port     = int(os.environ.get("SMTP_PORT", "587"))
+    user     = os.environ.get("SMTP_USER", "")
+    password = os.environ.get("SMTP_PASS", "")
+    sender   = os.environ.get("MAIL_FROM", "noreply@solonchecker.gr")
 
-    if not password or not sender:
+    print(f"[EMAIL] host={host} user={user} pass={'SET' if password else 'MISSING'} to={to}", flush=True)
+    if not host or not user or not password:
+        print("[EMAIL] SKIPPED - missing config", flush=True)
         return  # email not configured, skip silently
 
     msg = MIMEMultipart("alternative")
@@ -29,4 +31,5 @@ def send_email(to: str, subject: str, html: str):
         server.ehlo()
         server.starttls(context=context)
         server.login(user, password)
-        server.sendmail(sender, to, msg.as_string())
+        result = server.sendmail(sender, to, msg.as_string())
+        print(f"[EMAIL] SENT OK to={to} result={result}", flush=True)

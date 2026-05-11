@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.cases import bp
@@ -11,12 +11,17 @@ def _parse_year(val):
     except (TypeError, ValueError):
         return None
 
+GRACE_DAYS = 2  # μέρες grace period μετά τη λήξη trial/συνδρομής
+
 def _has_access(user):
-    """Active subscription OR trial period not yet expired."""
-    if user.subscription_status in ("active", "past_due"):
+    """Active subscription OR trial/grace period not yet expired."""
+    if user.subscription_status == "active":
         return True
+    if user.subscription_status == "past_due":
+        return True  # Stripe handles retry, keep access
     if user.subscription_status == "trial" and user.trial_ends_at:
-        return datetime.utcnow() < user.trial_ends_at
+        grace_end = user.trial_ends_at + timedelta(days=GRACE_DAYS)
+        return datetime.utcnow() < grace_end
     return False
 
 def _active_user():

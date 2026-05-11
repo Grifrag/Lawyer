@@ -10,6 +10,12 @@ class Config:
     JWT_COOKIE_SAMESITE = "Strict"
     RATELIMIT_STORAGE_URI = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
+class DevelopmentConfig(Config):
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "postgresql://solon:devpassword@localhost:5432/solon")
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-jwt-secret-key-minimum-32-bytes!!")
+    SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-flask-secret-key")
+    JWT_COOKIE_SECURE = False   # HTTP ok locally
+
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
@@ -24,7 +30,8 @@ class ProductionConfig(Config):
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "")
 
 config = {
+    "development": DevelopmentConfig,
     "testing": TestingConfig,
     "production": ProductionConfig,
-    "default": TestingConfig,
+    "default": DevelopmentConfig,
 }

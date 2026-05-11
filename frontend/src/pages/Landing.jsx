@@ -47,6 +47,8 @@ export default function Landing() {
       {/* Footer */}
       <footer className="w-full text-center py-6 text-gray-400 text-sm border-t border-gray-100">
         © 2026 Γρηγόριος Φραγκάκης — <a href="https://optigridtech.net" target="_blank" rel="noreferrer" className="hover:text-gray-600">optigridtech.net</a>
+        {' · '}
+        <a href="/terms" className="hover:text-gray-600">Όροι Χρήσης</a>
       </footer>
     </div>
   )

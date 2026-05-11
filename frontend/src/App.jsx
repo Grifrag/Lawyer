@@ -11,6 +11,7 @@ import CaseNew from './pages/CaseNew'
 import CaseEdit from './pages/CaseEdit'
 import Settings from './pages/Settings'
 import Billing from './pages/Billing'
+import Terms from './pages/Terms'
 
 const qc = new QueryClient()
 
@@ -43,6 +44,7 @@ export default function App() {
             <ProtectedRoute requireSub={false}><Settings /></ProtectedRoute>} />
           <Route path="/billing" element={
             <ProtectedRoute requireSub={false}><Billing /></ProtectedRoute>} />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
