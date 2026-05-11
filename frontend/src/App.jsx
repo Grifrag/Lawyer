@@ -18,7 +18,7 @@ function ProtectedRoute({ children, requireSub = true }) {
   const { accessToken, user } = useAuthStore()
   if (!accessToken) return <Navigate to="/login" replace />
   if (user && !user.email_verified) return <Navigate to="/verify-email" replace />
-  if (requireSub && user && !['active','past_due'].includes(user.subscription_status))
+  if (requireSub && user && !['active','past_due','trial'].includes(user.subscription_status))
     return <Navigate to="/billing" replace />
   return children
 }
