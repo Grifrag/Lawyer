@@ -8,7 +8,7 @@ export default function Landing() {
         <span className="font-bold text-lg md:text-xl">⚖️ Solon Checker</span>
         <div className="flex gap-2 md:gap-3">
           <Link to="/login" className="border border-blue-700 text-blue-700 px-3 py-2 md:px-4 rounded hover:bg-blue-50 text-sm font-medium">Σύνδεση</Link>
-          <Link to="/register" className="bg-blue-700 text-white px-3 py-2 md:px-4 rounded hover:bg-blue-800 text-sm font-medium">Εγγραφή</Link>
+          <Link to="/register" className="bg-blue-700 text-white px-3 py-2 md:px-4 rounded hover:bg-blue-800 text-sm font-medium">Δωρεάν Εγγραφή</Link>
         </div>
       </nav>
 
@@ -24,13 +24,14 @@ export default function Landing() {
           to="/register"
           className="self-center bg-blue-700 text-white px-10 py-4 rounded-lg text-lg font-semibold hover:bg-blue-800"
         >
-          Ξεκινήστε — €4.99/μήνα
+          Ξεκινήστε Δωρεάν — 30 μέρες trial
         </Link>
+        <p className="text-gray-400 text-sm mt-3">Δεν απαιτείται κάρτα · Μετά €4.99/μήνα · Ακύρωση οποιαδήποτε στιγμή</p>
 
         {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mt-10 md:mt-14 text-left">
           {[
-            ['🔍', 'Αυτόματος έλεγχος', '3 φορές/μέρα στο solon.gov.gr'],
+            ['🔍', 'Αυτόματος έλεγχος', 'Καθημερινά στο solon.gov.gr'],
             ['📧', 'Άμεση ειδοποίηση', 'Email ή Telegram'],
             ['⚖️', 'Για δικηγόρους', 'Απλό, γρήγορο, αξιόπιστο'],
           ].map(([icon, title, desc]) => (
@@ -45,7 +46,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="w-full text-center py-6 text-gray-400 text-sm border-t border-gray-100">
-        © 2026 Γρηγόριος Φραγκάκης — OptiGrid
+        © 2026 Γρηγόριος Φραγκάκης — <a href="https://optigridtech.net" target="_blank" rel="noreferrer" className="hover:text-gray-600">optigridtech.net</a>
       </footer>
     </div>
   )
