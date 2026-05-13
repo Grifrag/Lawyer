@@ -66,7 +66,13 @@ def _case_dict(c):
 def list_cases():
     user, err = _active_user()
     if err: return err
-    return jsonify([_case_dict(c) for c in user.cases]), 200
+    def _sort_key(c):
+        latest = (Result.query.filter_by(case_id=c.id)
+                  .order_by(Result.checked_at.desc()).first())
+        has_decision = bool(latest and latest.decision_number)
+        return (0 if has_decision else 1, c.created_at)
+    sorted_cases = sorted(user.cases, key=_sort_key)
+    return jsonify([_case_dict(c) for c in sorted_cases]), 200
 
 @bp.route("", methods=["POST"])
 @jwt_required()
