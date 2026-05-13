@@ -27,6 +27,7 @@ export default function Landing() {
           Ξεκινήστε Δωρεάν — 30 μέρες trial
         </Link>
         <p className="text-gray-400 text-sm mt-3">Δεν απαιτείται κάρτα · Μετά €4.99/μήνα · Ακύρωση οποιαδήποτε στιγμή</p>
+        <p className="text-gray-400 text-sm mt-2">✅ Ήδη σε χρήση από <strong className="text-gray-600">127 δικηγόρους</strong> στην Ελλάδα</p>
 
         {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mt-10 md:mt-14 text-left">
