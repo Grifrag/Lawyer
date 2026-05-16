@@ -61,6 +61,56 @@ function FAQ() {
   )
 }
 
+function MockEmail() {
+  return (
+    <div className="w-full max-w-2xl mx-auto px-6 md:px-8 py-10">
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 text-center">Έτσι θα δεις την επόμενη απόφαση</h2>
+      <p className="text-gray-500 text-center mb-8">Λαμβάνεις email σαν αυτό μόλις εκδοθεί απόφαση στο solon.gov.gr</p>
+      <div className="border border-gray-200 rounded-2xl shadow-lg overflow-hidden bg-white">
+        {/* Email header */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50">
+          <div className="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center text-lg flex-shrink-0">⚖️</div>
+          <div className="flex-1 flex justify-between items-center min-w-0">
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-gray-900 text-sm">Solon Checker</span>
+              <span className="text-xs text-gray-400">alerts@solonchecker.gr</span>
+            </div>
+            <span className="text-xs text-gray-400 ml-4 flex-shrink-0">Σήμερα, 14:32</span>
+          </div>
+        </div>
+        {/* Subject */}
+        <div className="px-5 pt-5 font-semibold text-gray-900">
+          📬 Νέα απόφαση: Υπόθεση 1234/2026 — Πρωτοδικείο Αθηνών
+        </div>
+        {/* Body */}
+        <div className="px-5 py-4 text-gray-700 text-sm leading-relaxed">
+          <p className="mb-3">Καλημέρα,</p>
+          <p className="mb-3">Εκδόθηκε απόφαση στην υπόθεση που παρακολουθείτε:</p>
+          <div className="bg-gray-50 border-l-4 border-blue-700 rounded-lg p-4 mb-4 space-y-1">
+            {[
+              ['Αριθμός υπόθεσης', '1234/2026'],
+              ['Δικαστήριο', 'Πρωτοδικείο Αθηνών'],
+              ['Τμήμα', 'Πολιτικό'],
+              ['Δημοσιεύτηκε', '16/05/2026, 14:25'],
+            ].map(([label, val]) => (
+              <div key={label} className="flex gap-2 text-sm">
+                <span className="text-gray-500 w-40 flex-shrink-0">{label}:</span>
+                <strong className="text-gray-900">{val}</strong>
+              </div>
+            ))}
+          </div>
+          <a href="#" className="inline-block bg-blue-700 text-white px-5 py-3 rounded-lg font-semibold text-sm mb-4 hover:bg-blue-800">
+            Δείτε την απόφαση στο solon.gov.gr →
+          </a>
+          <p className="text-xs text-gray-400 border-t border-gray-100 pt-3">
+            Λάβατε αυτό το email επειδή παρακολουθείτε αυτή την υπόθεση στο Solon Checker.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Landing() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -85,10 +135,9 @@ export default function Landing() {
           to="/register"
           className="bg-blue-700 text-white px-10 py-4 rounded-lg text-lg font-semibold hover:bg-blue-800"
         >
-          Ξεκινήστε Δωρεάν — 30 μέρες trial
+          Ξεκίνα δωρεάν — 30 μέρες trial
         </Link>
-        <p className="text-gray-400 text-sm mt-3">Δεν απαιτείται κάρτα · Από €4.99/μήνα · Ακύρωση οποιαδήποτε στιγμή</p>
-        <p className="text-gray-400 text-sm mt-2">✅ Ήδη σε χρήση από <strong className="text-gray-600">127 δικηγόρους</strong> στην Ελλάδα</p>
+        <p className="text-gray-400 text-sm mt-3">Δεν απαιτείται κάρτα · €4.99/μήνα · Ακύρωση οποιαδήποτε στιγμή</p>
 
         {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mt-10 md:mt-14 text-left w-full">
@@ -106,17 +155,8 @@ export default function Landing() {
         </div>
       </main>
 
-      {/* Demo video placeholder */}
-      <div className="w-full max-w-3xl mx-auto px-6 md:px-8 py-8">
-        <p className="text-center text-gray-500 text-sm mb-3 font-medium">Δες πώς δουλεύει σε 60 δευτερόλεπτα</p>
-        {/* TODO: προσθήκη Loom embed */}
-        <div className="w-full aspect-video bg-gray-100 rounded-2xl flex items-center justify-center border border-gray-200">
-          <div className="text-center">
-            <p className="text-4xl mb-2">▶️</p>
-            <p className="text-gray-400 text-sm">Demo video —近く公開</p>
-          </div>
-        </div>
-      </div>
+      {/* Mock email */}
+      <MockEmail />
 
       {/* GDPR / Security */}
       <div className="w-full bg-gray-50 border-y border-gray-100 py-12 md:py-16">
@@ -148,12 +188,8 @@ export default function Landing() {
       <div className="w-full bg-gray-50 border-t border-gray-100 py-12">
         <div className="max-w-2xl mx-auto px-6 md:px-8 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Ποιοι είμαστε</h2>
-          {/* TODO: συμπλήρωσε με πραγματικό bio */}
           <p className="text-gray-600 leading-relaxed">
-            Είμαστε η <strong>OptiGrid Technical Solutions</strong>, μια ομάδα developers
-            που φτιάχνει εργαλεία για επαγγελματίες. Το Solon Checker γεννήθηκε από
-            συνεργασία με δικηγόρους που έχασαν χρόνο ελέγχοντας χειροκίνητα το solon.gov.gr
-            κάθε μέρα. Φτιάξαμε αυτό που θα θέλαμε να υπάρχει.
+            Είμαστε η <strong>OptiGrid Technical Solutions</strong>, μια ομάδα developers που φτιάχνει εργαλεία για επαγγελματίες. Το Solon Checker γεννήθηκε από συνεργασία με δικηγόρους που έχασαν χρόνο ελέγχοντας χειροκίνητα το solon.gov.gr κάθε μέρα. Φτιάξαμε αυτό που θα θέλαμε να υπάρχει.
           </p>
           <p className="mt-4">
             <a href="https://optigridtech.net" target="_blank" rel="noreferrer" className="text-blue-600 text-sm hover:underline">optigridtech.net</a>
