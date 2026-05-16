@@ -100,7 +100,7 @@ export default function Terms() {
             </ul>
             <p className="mt-3">
               Για οποιοδήποτε αίτημα σχετικά με τα δεδομένα σας, επικοινωνήστε στο{' '}
-              <a href="mailto:info@solonchecker.gr" className="text-blue-600">info@solonchecker.gr</a>.
+              <a href="mailto:info@optigrid.net" className="text-blue-600">info@optigrid.net</a>.
             </p>
           </section>
 
@@ -126,7 +126,7 @@ export default function Terms() {
             <p>
               OptiGrid Technical Solutions<br />
               Email:{' '}
-              <a href="mailto:info@solonchecker.gr" className="text-blue-600">info@solonchecker.gr</a><br />
+              <a href="mailto:info@optigrid.net" className="text-blue-600">info@optigrid.net</a><br />
               Ιστότοπος:{' '}
               <a href="https://optigridtech.net" className="text-blue-600">optigridtech.net</a>
             </p>

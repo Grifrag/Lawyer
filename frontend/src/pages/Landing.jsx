@@ -194,7 +194,7 @@ export default function Landing() {
           <p className="mt-4">
             <a href="https://optigridtech.net" target="_blank" rel="noreferrer" className="text-blue-600 text-sm hover:underline">optigridtech.net</a>
             {' · '}
-            <a href="mailto:info@solonchecker.gr" className="text-blue-600 text-sm hover:underline">info@solonchecker.gr</a>
+            <a href="mailto:info@optigrid.net" className="text-blue-600 text-sm hover:underline">info@optigrid.net</a>
           </p>
         </div>
       </div>
