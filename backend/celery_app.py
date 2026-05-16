@@ -227,6 +227,7 @@ def _run_cases(cases, db_session):
                 case.consecutive_errors = 0
 
             db_session.commit()
+            time.sleep(2)  # Pause between cases to avoid rate-limiting from solon.gov.gr
 
         browser.close()
 
