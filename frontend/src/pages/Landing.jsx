@@ -79,7 +79,7 @@ export default function Landing() {
           Έμαθες για την απόφαση<br className="hidden md:block" /> 3 μέρες μετά;
         </h1>
         <p className="text-gray-500 text-lg md:text-xl mb-8 md:mb-10 max-w-2xl">
-          Δεν ξανασυμβαίνει. Βάλε τις υποθέσεις σου και λάβε email σε λιγότερο από 8 ώρες από τη δημοσίευση στο solon.gov.gr.
+          Δεν ξανασυμβαίνει. Βάλε τις υποθέσεις σου και λάβε email αμέσως μόλις βγει απόφαση στο solon.gov.gr.
         </p>
         <Link
           to="/register"
@@ -94,7 +94,7 @@ export default function Landing() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mt-10 md:mt-14 text-left w-full">
           {[
             ['🔍', 'Αυτόματος έλεγχος', 'Καθημερινά στο solon.gov.gr'],
-            ['📧', 'Γρήγορη ειδοποίηση', 'Email σε λιγότερο από 8 ώρες'],
+            ['📧', 'Άμεση ειδοποίηση', 'Email μόλις βγει απόφαση'],
             ['⚖️', 'Για δικηγόρους', 'Απλό, γρήγορο, αξιόπιστο'],
           ].map(([icon, title, desc]) => (
             <div key={title} className="p-5 md:p-6 border border-gray-200 rounded-xl hover:shadow-md transition-shadow">
