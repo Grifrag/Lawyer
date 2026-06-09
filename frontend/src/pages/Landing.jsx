@@ -215,6 +215,8 @@ export default function Landing() {
       <footer className="w-full text-center py-6 text-gray-400 text-sm border-t border-gray-100">
         © 2026 OptiGrid Technical Solutions — <a href="https://optigridtech.net" target="_blank" rel="noreferrer" className="hover:text-gray-600">optigridtech.net</a>
         {' · '}
+        <a href="/blog/" className="hover:text-gray-600">Οδηγοί</a>
+        {' · '}
         <a href="/terms" className="hover:text-gray-600">Όροι Χρήσης</a>
       </footer>
     </div>
